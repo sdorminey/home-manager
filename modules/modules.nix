@@ -116,6 +116,7 @@ let
     (loadModule ./services/udiskie.nix { })
     (loadModule ./services/unclutter.nix { })
     (loadModule ./services/window-managers/awesome.nix { })
+    (loadModule ./services/window-managers/bspwm.nix { })
     (loadModule ./services/window-managers/i3.nix { })
     (loadModule ./services/window-managers/xmonad.nix { })
     (loadModule ./services/xembed-sni-proxy.nix { condition = hostPlatform.isLinux; })
