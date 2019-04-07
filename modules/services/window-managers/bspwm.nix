@@ -7,10 +7,10 @@ let
   bspwm = cfg.bspwm-package;
   sxhkd = cfg.sxhkd-package;
 
-  start-sxhkd = pkgs.writeShellScriptBin "start-sxhkd" ''
-    . "${config.home.profileDirectory}/etc/profile.d/hm-session-vars.sh"
-    ${sxhkd}/bin/sxhkd &
-  '';
+# start-sxhkd = pkgs.writeShellScriptBin "start-sxhkd" ''
+#   . "${config.home.profileDirectory}/etc/profile.d/hm-session-vars.sh"
+#   ${sxhkd}/bin/sxhkd &
+# '';
 
   # Adapted from ${bspwm}/share/doc/bspwm/examples/bspwmrc:
   default-bspwmrc = let script = ''
@@ -24,7 +24,7 @@ let
       bspc config gapless_monocle      true
     ''; in writeShellScriptBin "bspwmrc" script;
 
-  default-sxhkdrc = builtins.readFile (builtins.toPath "${bspwm}/share/doc/bspwm/examples/sxhkdrc");
+  default-sxhkdrc = builtins.toPath "${bspwm}/share/doc/bspwm/examples/sxhkdrc";
 
 in {
   options = {
@@ -33,7 +33,7 @@ in {
 
       bspwmrc = mkOption {
         type = types.path;
-        default = default-bspwmrc;
+        default = builtins.toPath "${default-bspwmrc}/bin/bspwmrc";
         defaultText = "Adapted default bspwmrc.";
         description = "Config shell script for bspwm.";
       };
@@ -67,25 +67,32 @@ in {
     xdg.configFile."bspwm/bspwmrc".source = cfg.bspwmrc;
     xdg.configFile."sxhkd/sxhkdrc".source = cfg.sxhkdrc;
 
-    xsession.windowManager.command = "${bspwm}/bin/bspwm";
+    xsession = {
+      initExtra = ''
+        ${sxhkd}/bin/sxhkd &
+      '';
 
-    systemd.user.services.sxhkd = {
-      Unit = {
-        Description = "Simple X Hotkey Daemon";
-        After = [ "graphical-session-pre.target" ];
-        PartOf = [ "graphical-session.target" ];
-        X-Restart-Triggers = [ config.xdg.configFile."sxhkd/sxhkdrc".source ];
-      };
-
-      Service = {
-        Type = "forking";
-#        Environment = "PATH=${cfg.sxhkd-package}/bin:${cfg.bspwm-package}/bin:/run/wrappers/bin SHELL=${pkgs.runtimeShell}";
-        ExecStart = "${start-sxhkd}/bin/start-sxhkd";
-      };
-
-      Install = {
-        WantedBy = [ "graphical-session.target" ];
-      };
+      windowManager.command = "${bspwm}/bin/bspwm";
     };
+    
+
+#   systemd.user.services.sxhkd = {
+#     Unit = {
+#       Description = "Simple X Hotkey Daemon";
+#       After = [ "graphical-session-pre.target" ];
+#       PartOf = [ "graphical-session.target" ];
+#       X-Restart-Triggers = [ config.xdg.configFile."sxhkd/sxhkdrc".source ];
+#     };
+
+#     Service = {
+#       Type = "forking";
+#        Environment = "PATH=${cfg.sxhkd-package}/bin:${cfg.bspwm-package}/bin:/run/wrappers/bin SHELL=${pkgs.runtimeShell}";
+#       ExecStart = "${start-sxhkd}/bin/start-sxhkd";
+#     };
+
+#     Install = {
+#       WantedBy = [ "graphical-session.target" ];
+#     };
+#   };
   };
 }
